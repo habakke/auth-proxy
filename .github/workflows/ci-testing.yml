@@ -13,7 +13,7 @@ jobs:
       - name: test
         run: make test
       - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v1.2.1
+        uses: codecov/codecov-action@v1.3.1
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: ./build/cover.out
