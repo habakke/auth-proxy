@@ -13,13 +13,16 @@ import (
 )
 
 func TestProxyServeHTTP(t *testing.T) {
+	_ = os.Setenv("PORT", "8080")
+	_ = os.Setenv("LOGGING", "TRUE")
+	_ = os.Setenv("TOKEN", "token_goes_here")
+	_ = os.Setenv("TARGET", "http://kubernetes-dashboard.k8s.matrise.net")
+
 	req, err := http.NewRequest("GET", "http://localhost:8080/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_ = os.Setenv("TOKEN", "token_goes_here")
-	_ = os.Setenv("TARGET", "http://kubernetes-dashboard.k8s.matrise.net")
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	p := &Proxy{}
 	lmw := util.LoggingMiddleware(log.Logger)

@@ -13,11 +13,11 @@ import (
 
 type Proxy struct {
 	Target string
-	Token string
+	Token  string
 }
 
 func removeAllHeaders(header http.Header) {
-	for k,_ := range header {
+	for k, _ := range header {
 		header.Del(k)
 	}
 }
@@ -34,9 +34,6 @@ func appendHostToXForwardHeader(header http.Header, host string) {
 
 func appendAuthhorizationHeader(header http.Header, authorization string) {
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", authorization))
-}
-
-type proxy struct {
 }
 
 func (p *Proxy) getProxyURL() string {
