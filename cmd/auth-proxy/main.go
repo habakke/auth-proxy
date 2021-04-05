@@ -40,13 +40,13 @@ func main() {
 
 	p := &proxy.Proxy{
 		Target: *target,
-		Token: *token,
+		Token:  *token,
 	}
 	lmw := util.LoggingMiddleware(log.Logger)
 	lp := lmw(p)
 
-	log.Info().Str("interface", "127.0.0.1").Str("port", *port).Msg("Starting proxy server")
-	if err := http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", *port), lp); err != nil {
+	log.Info().Str("interface", "0.0.0.0").Str("port", *port).Msg("Starting proxy server")
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", *port), lp); err != nil {
 		log.Fatal().Msgf("ListenAndServe: %v", err)
 	}
 }

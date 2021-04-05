@@ -2,8 +2,12 @@ name: release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [master]
+#on:
+#  push:
+#    tags:
+#      - "v*"
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
