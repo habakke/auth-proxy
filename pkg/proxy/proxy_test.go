@@ -18,12 +18,12 @@ func TestProxyServeHTTP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	os.Setenv("TARGET", "http://kubernetes-dashboard.k8s.matrise.net")
+	_ = os.Setenv("TOKEN", "token_goes_here")
+	_ = os.Setenv("TARGET", "http://kubernetes-dashboard.k8s.matrise.net")
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	p := &Proxy{}
 	lmw := util.LoggingMiddleware(log.Logger)
 	lp := lmw(p)
-
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(lp.ServeHTTP)
