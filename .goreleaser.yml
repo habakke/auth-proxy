@@ -3,7 +3,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - main: main.go
+  - main: cmd/auth-proxy/main.go
     id: auth-proxy
     binary: auth-proxy
     goos:
