@@ -1,8 +1,11 @@
 CMD=auth-proxy
 BINARY=auth-proxy
 IMAGE=auth-proxy
-ROOT_DIR := $(if $(ROOT_DIR),$(ROOT_DIR),$(shell git rev-parse --show-toplevel))
-BUILD_DIR = $(ROOT_DIR)/build
+ROOT_DIR        := $(if $(ROOT_DIR),$(ROOT_DIR),$(shell git rev-parse --show-toplevel))
+BUILD_DIR       := $(ROOT_DIR)/build
+VERSION         := $(shell cat ./VERSION)
+
+.PHONY: build clean start test fmt release
 
 prepare:
 	mkdir -p $(BUILD_DIR)
@@ -20,3 +23,10 @@ start: build
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+fmt:
+	go fmt ./... -v
+
+release:
+	git tag -a $(VERSION) -m "Release" || true
+	git push origin $(VERSION)

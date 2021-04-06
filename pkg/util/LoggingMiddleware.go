@@ -59,24 +59,25 @@ func LoggingMiddleware(logger zerolog.Logger) func(http.Handler) http.Handler {
 			wrapped := wrapResponseWriter(w)
 			defer wrapped.body.Reset()
 			next.ServeHTTP(wrapped, r)
-/*
-			log.Print("=== REQUEST HEADERS ===")
-			for k, v := range r.Header {
-				log.Print(fmt.Sprintf(" << %s: %s", k, v))
-			}
+			/*
+				log.Print("=== REQUEST HEADERS ===")
+				for k, v := range r.Header {
+					log.Print(fmt.Sprintf(" << %s: %s", k, v))
+				}
 
-			log.Print("=== RESPONSE HEADERS ===")
-			for k, v := range wrapped.Header() {
-				log.Print(fmt.Sprintf(" << %s: %s", k, v))
-			}
-			logger.Print(fmt.Sprintf("=== BODY ===\n%s", string(wrapped.body.Bytes())))
-*/
+				log.Print("=== RESPONSE HEADERS ===")
+				for k, v := range wrapped.Header() {
+					log.Print(fmt.Sprintf(" << %s: %s", k, v))
+				}
+				logger.Print(fmt.Sprintf("=== BODY ===\n%s", string(wrapped.body.Bytes())))
+			*/
 			logger.Debug().
 				Int("status", wrapped.status).
 				Dur("duration", time.Since(start)).
 				Str("host", r.Host).
 				Str("path", r.URL.EscapedPath()).
 				Str("method", r.Method).
+				Str("params", r.URL.RawQuery).
 				Msg("Request")
 		}
 

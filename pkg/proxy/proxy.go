@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/habakke/auth-proxy/internal/session"
 	"github.com/rs/zerolog/log"
 	"net"
 	"net/http"
@@ -32,7 +33,7 @@ func appendHostToXForwardHeader(header http.Header, host string) {
 	header.Set("X-Forwarded-For", host)
 }
 
-func appendAuthhorizationHeader(header http.Header, authorization string) {
+func appendAuthorizationHeader(header http.Header, authorization string) {
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", authorization))
 }
 
@@ -52,6 +53,28 @@ func (p *Proxy) getToken() string {
 	return token
 }
 
+var whiteList = [...]string{"/favicon.ico", "robots.txt"}
+
+func (p *Proxy) Authenticate(req *http.Request) bool {
+	for _, p := range whiteList {
+		if req.URL.Path == p {
+			return true
+		}
+	}
+
+	s, err := session.ReadSession(req)
+	if err != nil {
+		return false
+	}
+
+	// TODO Add further checking here
+	if s == nil {
+		return false
+	}
+
+	return true
+}
+
 // Serve a reverse proxy for a given url
 func serveReverseProxy(target string, token string, res http.ResponseWriter, req *http.Request) {
 	// parse the url
@@ -61,7 +84,7 @@ func serveReverseProxy(target string, token string, res http.ResponseWriter, req
 	if token == "" {
 		log.Fatal().Msg("Auth token is missing, exiting...")
 	}
-	appendAuthhorizationHeader(req.Header, token)
+	appendAuthorizationHeader(req.Header, token)
 	if clientIP, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
 		appendHostToXForwardHeader(req.Header, clientIP)
 	}
@@ -77,5 +100,10 @@ func serveReverseProxy(target string, token string, res http.ResponseWriter, req
 }
 
 func (p *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	serveReverseProxy(p.getProxyURL(), p.getToken(), res, req)
+	if !p.Authenticate(req) {
+		session.RemoveSession(res)
+		http.Redirect(res, req, fmt.Sprintf("/auth/login?path=%s", req.URL.Path), http.StatusTemporaryRedirect)
+	} else {
+		serveReverseProxy(p.getProxyURL(), p.getToken(), res, req)
+	}
 }
