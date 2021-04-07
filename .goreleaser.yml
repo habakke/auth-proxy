@@ -2,6 +2,8 @@ project_name: auth-proxy
 before:
   hooks:
     - go mod tidy
+gomod:
+  proxy: true
 builds:
   - main: cmd/auth-proxy/main.go
     id: auth-proxy
