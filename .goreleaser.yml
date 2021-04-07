@@ -65,6 +65,8 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Date }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    extra_files:
+      - glob: static/**
   - image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-386"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-386"
@@ -83,6 +85,8 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Date }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    extra_files:
+      - glob: static/**
   - image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-arm64"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-arm64"
@@ -101,6 +105,8 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Date }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    extra_files:
+      - glob: static/**
   - image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-arm64v8"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-arm64v8"
@@ -119,6 +125,8 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Date }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    extra_files:
+      - glob: static/**
   - image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-armv6"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-armv6"
@@ -138,6 +146,8 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Date }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    extra_files:
+      - glob: static/**
   - image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-armv7"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-armv7"
@@ -157,6 +167,8 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ .Date }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    extra_files:
+      - glob: static/**
 release:
   disable: true
 changelog:

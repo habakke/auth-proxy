@@ -25,7 +25,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 fmt:
-	go fmt ./... -v
+	go fmt ./...
 
 release:
 	git tag -a $(VERSION) -m "Release" || true
