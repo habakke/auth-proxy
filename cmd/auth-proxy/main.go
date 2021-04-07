@@ -12,7 +12,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
+	"runtime/pprof"
 	"time"
 )
 
@@ -26,7 +28,7 @@ func ConfigureMaxProcs() {
 }
 
 func ConfigureLogging() {
-	var logging = os.Getenv("LOGGING")
+	var logging = os.Getenv("LOGLEVEL")
 	l, err := zerolog.ParseLevel(logging)
 	if err != nil {
 		l = zerolog.InfoLevel
@@ -42,7 +44,41 @@ func ConfigureLogging() {
 	log.Info().Msgf("Setting default loglevel to %s", l.String())
 }
 
+func profileStart() {
+	if len(os.Getenv("PROFILE")) == 0 {
+		return
+	}
+	f, err := os.Create("cpuprofile")
+	if err != nil {
+		log.Error().AnErr("err", err).Msg("could not create CPU profile")
+		os.Exit(1)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Error().AnErr("err", err).Msg("could not start CPU profile")
+		os.Exit(1)
+	}
+}
+
+func profileStop() {
+	if len(os.Getenv("PROFILE")) == 0 {
+		return
+	}
+	pprof.StopCPUProfile()
+}
+
+func waitForSignal() os.Signal {
+	signalChan := make(chan os.Signal, 1)
+	defer close(signalChan)
+	signal.Notify(signalChan, os.Kill, os.Interrupt)
+	s := <-signalChan
+	signal.Stop(signalChan)
+	return s
+}
+
 func main() {
+	profileStart()
+	defer profileStop()
+
 	var port = os.Getenv("PORT")
 	var target = os.Getenv("TARGET")
 	var token = os.Getenv("TOKEN")
@@ -67,6 +103,9 @@ func main() {
 	r.Handle("/metrics", promhttp.Handler())
 	r.PathPrefix("/").Handler(lmw(p))
 
+	srv := http.Server{Addr: addr, Handler: r}
 	log.Info().Msgf("Starting proxy server for %s on %s", target, addr)
-	log.Fatal().Err(http.ListenAndServe(addr, r))
+	go func() { log.Fatal().Err(srv.ListenAndServe()) }()
+	s := waitForSignal()
+	log.Info().Msgf("signal received, shutting down (%s)", s)
 }

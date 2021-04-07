@@ -17,7 +17,7 @@ import (
 )
 
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  "http://localhost:8081/auth/google/callback",
+	RedirectURL:  os.Getenv("GOOGLE_OAUTH_CALLBACK_URL"), // Ex. https://<domain>/auth/google/callback
 	ClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
 	ClientSecret: os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
 	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
@@ -25,19 +25,6 @@ var googleOauthConfig = &oauth2.Config{
 }
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-
-/*
- {
-  "id": "113699748174122511172",
-  "email": "habakke@matrise.net",
-  "verified_email": true,
-  "name": "Håvard Bakke",
-  "given_name": "Håvard",
-  "family_name": "Bakke",
-  "picture": "https://lh3.googleusercontent.com/a-/AOh14Gh7BJIdgVp-xw6RGWfUYVY5JfRRiROcZeS6vB1HmKU=s96-c",
-  "hd": "matrise.net"
-}
-*/
 
 type GoogleUserInfo struct {
 	Id         string `json:"id,omitempty"`
