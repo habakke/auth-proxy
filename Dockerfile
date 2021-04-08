@@ -1,4 +1,4 @@
-FROM alpine as certs
+FROM alpine:3.13 as certs
 RUN apk add -U ca-certificates
 
 FROM busybox:musl

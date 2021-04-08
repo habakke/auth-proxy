@@ -16,7 +16,6 @@ builds:
       - arm
       - arm64
     goarm:
-      - 6
       - 7
     env:
       - CGO_ENABLED=0
@@ -27,7 +26,6 @@ docker_manifests:
   - name_template: "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}"
     image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-amd64"
-      - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-armv6"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-armv7"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-arm64"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-arm64v8"
@@ -35,7 +33,6 @@ docker_manifests:
   - name_template: "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}"
     image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-amd64"
-      - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-armv6"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-armv7"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-arm64"
       - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-arm64v8"
@@ -43,7 +40,6 @@ docker_manifests:
   - name_template: "ghcr.io/habakke/{{ .ProjectName }}:latest"
     image_templates:
       - "ghcr.io/habakke/{{ .ProjectName }}:latest-amd64"
-      - "ghcr.io/habakke/{{ .ProjectName }}:latest-armv6"
       - "ghcr.io/habakke/{{ .ProjectName }}:latest-armv7"
       - "ghcr.io/habakke/{{ .ProjectName }}:latest-arm64"
       - "ghcr.io/habakke/{{ .ProjectName }}:latest-arm64v8"
@@ -121,27 +117,6 @@ dockers:
     build_flag_templates:
       - --pull
       - --platform=linux/arm64/v8
-      - --label=org.opencontainers.image.title={{ .ProjectName }}
-      - --label=org.opencontainers.image.description=Authentication proxy
-      - --label=org.opencontainers.image.source=https://github.com/habakke/{{ .ProjectName }}
-      - --label=org.opencontainers.image.version={{ .Version }}
-      - --label=org.opencontainers.image.created={{ .Date }}
-      - --label=org.opencontainers.image.revision={{ .FullCommit }}
-    extra_files:
-      - ./static/auth/login/index.html
-  - image_templates:
-      - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Version }}-armv6"
-      - "ghcr.io/habakke/{{ .ProjectName }}:{{ .Env.GITHUB_SHA }}-armv6"
-      - "ghcr.io/habakke/{{ .ProjectName }}:latest-armv6"
-    ids: [auth-proxy]
-    goos: linux
-    goarch: arm
-    goarm: 6
-    use_buildx: true
-    dockerfile: Dockerfile
-    build_flag_templates:
-      - --pull
-      - --platform=linux/arm/v6
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description=Authentication proxy
       - --label=org.opencontainers.image.source=https://github.com/habakke/{{ .ProjectName }}
