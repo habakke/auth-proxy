@@ -89,7 +89,6 @@ dockers:
     ids: [auth-proxy]
     goos: linux
     goarch: arm64
-    goarm: 8
     use_buildx: true
     dockerfile: Dockerfile
     build_flag_templates:
