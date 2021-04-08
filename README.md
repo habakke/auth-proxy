@@ -28,3 +28,7 @@ available environmental variables and their default value.
 | GOOGLE_OAUTH_CLIENT_ID | - | Google Oauth2 Client ID |
 | GOOGLE_OAUTH_CLIENT_SECRET | - | Google Oauth2 Client Secret |
 | GOOGLE_OAUTH_CALLBACK_URL | - | Google Oauth2 callback url, ex. https://<domain>/auth/google/callback |
+
+## Todo
+
+* Implement basic instrumentation, publishing basic HTTP stats to prometheus

@@ -1,5 +1,5 @@
-FROM alpine:3.13 as certs
-RUN apk add -U ca-certificates
+FROM alpine:latest as certs
+RUN apk add --no-cache -U ca-certificates
 
 FROM busybox:musl
 COPY auth-proxy /auth-proxy
