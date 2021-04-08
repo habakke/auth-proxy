@@ -1,11 +1,14 @@
 # Authentication proxy
 
-Authentication proxy used to add SSO authentication support to applications which does not
-natively support this.
+Authentication proxy used to add authentication to applications which does not
+natively support it.
+
+Supported authentication providers:
+* Google Oauth2
 
 ## Config Google Project
 
-First things first, we need to create our Google Project and create OAuth2 credentials.
+First things first, we need to create a Google Project and create OAuth2 credentials.
 
 * Go to Google Cloud Platform
 * Create a new project or select one if you already have it.
@@ -13,7 +16,7 @@ First things first, we need to create our Google Project and create OAuth2 crede
 * Add "authorized redirect URL", for this example localhost:8000/auth/google/callback
 * Copy the client_id and client secret
 
-## Environmental variables
+## Configuration
 
 The proxy is fully controlled through environmental variables. The table below lists the 
 available environmental variables and their default value.
@@ -29,6 +32,5 @@ available environmental variables and their default value.
 | GOOGLE_OAUTH_CLIENT_SECRET | - | Google Oauth2 Client Secret |
 | GOOGLE_OAUTH_CALLBACK_URL | - | Google Oauth2 callback url, ex. https://<domain>/auth/google/callback |
 
-## Todo
+## TODO
 
-* Implement basic instrumentation, publishing basic HTTP stats to prometheus
