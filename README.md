@@ -26,6 +26,8 @@ available environmental variables and their default value.
 | PORT | 8080 | The port number which the service listens on |
 | TARGET | - | The URL where the auth-proxy should forward requests after authenticating |
 | TOKEN | - |Bearer token to append to all requests towards the TARGET |
+| COOKIE_SEED | - | Seed used to introduce entropy in the cookie signatures |
+| COOKIE_KEY | - | Key used to encrypt cookie payload |
 | LOGLEVEL | info | Default log level set to any of `error, warn, info, debug, trace`. If this parameter is not set, it defaults to `info` |
 | PROFILE | - | Set this variable to enable profiling of the golang application |
 | GOOGLE_OAUTH_CLIENT_ID | - | Google Oauth2 Client ID |

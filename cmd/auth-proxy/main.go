@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"github.com/felixge/httpsnoop"
 	"github.com/gorilla/mux"
-	"github.com/habakke/auth-proxy/internal/auth"
+	"github.com/habakke/auth-proxy/internal/auth/providers"
 	"github.com/habakke/auth-proxy/internal/healthz"
+	"github.com/habakke/auth-proxy/internal/session"
 	"github.com/habakke/auth-proxy/pkg/proxy"
 	"github.com/habakke/auth-proxy/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,6 +18,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"syscall"
 	"time"
 )
 
@@ -116,15 +118,6 @@ func profileStop() {
 	pprof.StopCPUProfile()
 }
 
-func waitForSignal() os.Signal {
-	signalChan := make(chan os.Signal, 1)
-	defer close(signalChan)
-	signal.Notify(signalChan, os.Kill, os.Interrupt)
-	s := <-signalChan
-	signal.Stop(signalChan)
-	return s
-}
-
 func main() {
 	profileStart()
 	defer profileStop()
@@ -132,26 +125,25 @@ func main() {
 	var port = os.Getenv("PORT")
 	var target = os.Getenv("TARGET")
 	var token = os.Getenv("TOKEN")
+	var cookieSeed = os.Getenv("COOKIE_SEED")
+	var cookieKey = os.Getenv("COOKIE_KEY")
 
 	addr := fmt.Sprintf(":%s", port)
-	log.Info().Msgf("Starting proxy server for %s on %s", target, addr)
+	log.Info().Msgf("starting proxy server for %s on %s", target, addr)
 	defer log.Info().Msg("shutting down...")
 
-	p := &proxy.Proxy{
-		Target: target,
-		Token:  token,
-	}
+	oauthProvider := providers.New("Google", &providers.ProviderData{})
+	lmw := util.NewLoggingMiddleware(log.Logger)
+	sm := session.NewManager(cookieSeed, cookieKey)
+	p := proxy.New(
+		target,
+		oauthProvider,
+		sm)
 
-	lmw := util.LoggingMiddleware(log.Logger)
-	o := auth.NewGoogleOauth2(token)
-	a := auth.NewAuthLocal(token)
+	p.AddBearingTokenToUpstreamRequests(token)
 
 	r := mux.NewRouter()
 	r.Use(basicPromMetricsHandler)
-	r.PathPrefix("/auth/login").Methods("GET").Handler(lmw(http.FileServer(http.Dir("./static"))))
-	r.PathPrefix("/auth/login").Methods("POST").Handler(lmw(http.HandlerFunc(a.LoginHandler)))
-	r.Handle("/auth/google/login", lmw(http.HandlerFunc(o.LoginHandler)))
-	r.Handle("/auth/google/callback", lmw(http.HandlerFunc(o.CallbackHandler)))
 	r.Handle("/healthz", healthz.Handler())
 	r.Handle("/metrics", promhttp.Handler())
 	r.PathPrefix("/").Handler(lmw(p))
@@ -159,4 +151,13 @@ func main() {
 	srv := http.Server{Addr: addr, Handler: r}
 	go func() { log.Fatal().Err(srv.ListenAndServe()) }()
 	_ = waitForSignal()
+}
+
+func waitForSignal() os.Signal {
+	signalChan := make(chan os.Signal, 1)
+	defer close(signalChan)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	s := <-signalChan
+	signal.Stop(signalChan)
+	return s
 }

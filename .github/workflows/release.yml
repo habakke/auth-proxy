@@ -7,10 +7,6 @@ on:
       - master
     tags:
       - "v*"
-#on:
-#  push:
-#    tags:
-#      - "v*"
 
 jobs:
   goreleaser:

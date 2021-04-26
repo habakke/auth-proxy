@@ -31,8 +31,6 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.status = code
 	rw.ResponseWriter.WriteHeader(code)
 	rw.wroteHeader = true
-
-	return
 }
 
 func (rw *responseWriter) Write(data []byte) (int, error) {
@@ -50,7 +48,7 @@ func errorHandler(logger zerolog.Logger, w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func LoggingMiddleware(logger zerolog.Logger) func(http.Handler) http.Handler {
+func NewLoggingMiddleware(logger zerolog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			defer errorHandler(logger, w, r)
@@ -59,18 +57,7 @@ func LoggingMiddleware(logger zerolog.Logger) func(http.Handler) http.Handler {
 			wrapped := wrapResponseWriter(w)
 			defer wrapped.body.Reset()
 			next.ServeHTTP(wrapped, r)
-			/*
-				log.Print("=== REQUEST HEADERS ===")
-				for k, v := range r.Header {
-					log.Print(fmt.Sprintf(" << %s: %s", k, v))
-				}
 
-				log.Print("=== RESPONSE HEADERS ===")
-				for k, v := range wrapped.Header() {
-					log.Print(fmt.Sprintf(" << %s: %s", k, v))
-				}
-				logger.Print(fmt.Sprintf("=== BODY ===\n%s", string(wrapped.body.Bytes())))
-			*/
 			logger.Debug().
 				Int("status", wrapped.status).
 				Dur("duration", time.Since(start)).
