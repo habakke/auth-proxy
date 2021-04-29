@@ -5,9 +5,10 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"strconv"
@@ -130,9 +131,11 @@ func DecryptCookieValue(key string, encryptedValue string) (value string, err er
 }
 
 func cookieSignature(args ...string) string {
-	h := hmac.New(sha1.New, []byte(args[0]))
+	h := hmac.New(sha256.New, []byte(args[0]))
 	for _, arg := range args[1:] {
-		h.Write([]byte(arg))
+		if _, err := h.Write([]byte(arg)); err != nil {
+			log.Fatal().AnErr("err", err).Msg("failed to write cookie sha256 signature")
+		}
 	}
 	var b []byte
 	b = h.Sum(b)

@@ -17,6 +17,10 @@ check:
 	go get -u honnef.co/go/tools/cmd/staticcheck
 	$(shell go list -f {{.Target}} honnef.co/go/tools/cmd/staticcheck) ./...
 
+sec:
+	go get -u github.com/securego/gosec/v2/cmd/gosec
+	$(shell go list -f {{.Target}} github.com/securego/gosec/v2/cmd/gosec) -fmt=golint ./...
+
 test: prepare
 	go test -short -coverprofile=$(BUILD_DIR)/cover.out ./...
 
@@ -40,5 +44,5 @@ release-test:
 	goreleaser release --skip-publish --snapshot --rm-dist
 
 release: export GITHUB_SHA=$(GITSHA)
-release: release-test
+release: test release-test
 	git tag -a $(VERSION) -m "Release" && git push origin $(VERSION)
