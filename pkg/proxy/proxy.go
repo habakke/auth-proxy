@@ -149,12 +149,15 @@ func (p *Proxy) serveReverseProxy(target string, authenticated bool, res http.Re
 	}
 
 	// create the reverse proxy
-	proxy := httputil.ReverseProxy{Director: func(r *http.Request) {
-		r.URL.Scheme = u.Scheme
-		r.URL.Host = u.Host
-		r.URL.Path = u.Path + r.URL.Path
-		r.Host = u.Host
-	}}
+	proxy := httputil.ReverseProxy{
+		Director: func(r *http.Request) {
+			r.URL.Scheme = u.Scheme
+			r.URL.Host = u.Host
+			r.URL.Path = u.Path + r.URL.Path
+			r.Host = u.Host
+		},
+		Transport: util.NewLoggingRoundTripper(http.DefaultTransport),
+	}
 	proxy.ServeHTTP(res, req)
 }
 

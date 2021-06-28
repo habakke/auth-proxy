@@ -8,7 +8,6 @@ import (
 	"github.com/habakke/auth-proxy/internal/healthz"
 	"github.com/habakke/auth-proxy/internal/session"
 	"github.com/habakke/auth-proxy/pkg/proxy"
-	"github.com/habakke/auth-proxy/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
@@ -133,7 +132,6 @@ func main() {
 	defer log.Info().Msg("shutting down...")
 
 	oauthProvider := providers.New("Google", &providers.ProviderData{})
-	lmw := util.NewLoggingMiddleware(log.Logger)
 	sm := session.NewManager(cookieSeed, cookieKey)
 	p := proxy.New(
 		target,
@@ -146,7 +144,7 @@ func main() {
 	r.Use(basicPromMetricsHandler)
 	r.Handle("/healthz", healthz.Handler())
 	r.Handle("/metrics", promhttp.Handler())
-	r.PathPrefix("/").Handler(lmw(p))
+	r.PathPrefix("/").Handler(p)
 
 	srv := http.Server{Addr: addr, Handler: r}
 	go func() { log.Fatal().Err(srv.ListenAndServe()) }()
