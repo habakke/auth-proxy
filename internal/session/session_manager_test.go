@@ -17,7 +17,7 @@ func bootstrapTestServer(sm *Manager) (srv *httptest.Server) {
 	srv = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		switch req.URL.Path {
 		case "/attach":
-			_ = sm.AttachSession(res, Data{ID: "test", Name: "test", Authorised: false})
+			_ = sm.AttachSession(res, Data{ID: "test", Name: "test", Authorized: false})
 		default:
 			hostname, _, _ := net.SplitHostPort(req.Host)
 			_, _ = res.Write([]byte(fmt.Sprintf("hostname=%s\n", hostname)))

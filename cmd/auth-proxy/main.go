@@ -1,16 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/felixge/httpsnoop"
 	"github.com/gorilla/mux"
 	"github.com/habakke/auth-proxy/internal/auth/providers"
 	"github.com/habakke/auth-proxy/internal/healthz"
+	"github.com/habakke/auth-proxy/internal/metrics"
 	"github.com/habakke/auth-proxy/internal/session"
 	"github.com/habakke/auth-proxy/pkg/proxy"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/habakke/auth-proxy/pkg/util/logutils"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
@@ -23,76 +23,21 @@ import (
 
 // Global variables
 var (
-	psb = prometheus.ExponentialBuckets(1, 10, 6)
-
-	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "http_requests_total",
-		Help: "Count of all HTTP requests",
-	}, []string{"path", "method", "code"})
-
-	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "http_request_duration_seconds",
-		Help: "Duration of all HTTP requests",
-	}, []string{"path", "method"})
-
-	httpRequestLength = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "http_request_length_bytes",
-		Help:    "Length of all HTTP requests",
-		Buckets: psb,
-	}, []string{"path", "method"})
-
-	httpResponseLength = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "http_response_length_bytes",
-		Help:    "Length of all HTTP responses",
-		Buckets: psb,
-	}, []string{"path", "method"})
+	port       = os.Getenv("PORT")
+	target     = os.Getenv("TARGET")
+	token      = os.Getenv("TOKEN")
+	cookieSeed = os.Getenv("COOKIE_SEED")
+	cookieKey  = os.Getenv("COOKIE_KEY")
 )
 
 func init() {
-	ConfigurePrometheus()
 	ConfigureMaxProcs()
-	ConfigureLogging()
-}
-
-func basicPromMetricsHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		route := mux.CurrentRoute(req)
-		path, _ := route.GetPathTemplate()
-		timer := prometheus.NewTimer(httpRequestDuration.WithLabelValues(path, req.Method))
-		m := httpsnoop.CaptureMetrics(next, res, req)
-		timer.ObserveDuration()
-		httpRequestsTotal.WithLabelValues(path, req.Method, fmt.Sprint(m.Code)).Inc()
-		httpRequestLength.WithLabelValues(path, req.Method).Observe(float64(req.ContentLength))
-		httpResponseLength.WithLabelValues(path, req.Method).Observe(float64(m.Written))
-	})
-}
-
-func ConfigurePrometheus() {
-	prometheus.MustRegister(httpRequestsTotal)
-	prometheus.MustRegister(httpRequestDuration)
-	prometheus.MustRegister(httpRequestLength)
-	prometheus.MustRegister(httpResponseLength)
+	metrics.ConfigurePrometheusMetrics()
+	logutils.ConfigureLogging()
 }
 
 func ConfigureMaxProcs() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-}
-
-func ConfigureLogging() {
-	var logging = os.Getenv("LOGLEVEL")
-	l, err := zerolog.ParseLevel(logging)
-	if err != nil {
-		l = zerolog.InfoLevel
-	}
-	zerolog.SetGlobalLevel(l)
-
-	if env, _ := os.LookupEnv("ENV"); env == "local" {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	} else {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	}
-	log.Logger = log.Logger.With().Caller().Logger()
-	log.Info().Msgf("Setting default loglevel to %s", l.String())
 }
 
 func profileStart() {
@@ -121,15 +66,10 @@ func main() {
 	profileStart()
 	defer profileStop()
 
-	var port = os.Getenv("PORT")
-	var target = os.Getenv("TARGET")
-	var token = os.Getenv("TOKEN")
-	var cookieSeed = os.Getenv("COOKIE_SEED")
-	var cookieKey = os.Getenv("COOKIE_KEY")
+	ctx := context.Background()
 
 	addr := fmt.Sprintf(":%s", port)
 	log.Info().Msgf("starting proxy server for %s on %s", target, addr)
-	defer log.Info().Msg("shutting down...")
 
 	oauthProvider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
@@ -141,14 +81,30 @@ func main() {
 	p.AddBearingTokenToUpstreamRequests(token)
 
 	r := mux.NewRouter()
-	r.Use(basicPromMetricsHandler)
+	r.Use(metrics.CreatePrometheusHTTPMetricsHandler)
 	r.Handle("/healthz", healthz.Handler())
 	r.Handle("/metrics", promhttp.Handler())
 	r.PathPrefix("/").Handler(p)
 
-	srv := http.Server{Addr: addr, Handler: r}
+	srv := http.Server{
+		Addr:         addr,
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      r,
+	}
 	go func() { log.Fatal().Err(srv.ListenAndServe()) }()
 	_ = waitForSignal()
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	err := srv.Shutdown(ctx)
+	if err != nil {
+		log.Info().Err(err).Msg("shutting down...")
+	} else {
+		log.Info().Msg("shutting down...")
+	}
+	os.Exit(0)
 }
 
 func waitForSignal() os.Signal {

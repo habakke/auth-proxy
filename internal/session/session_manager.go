@@ -56,10 +56,15 @@ func (m *Manager) ReadSession(req *http.Request) (*Data, error) {
 		return nil, fmt.Errorf("cookie %q not present", SessionCookieName)
 	}
 
-	data, err := m.ReadSessionCookie(c, m.cookieSeed, m.cookieKey)
+	var data string
+	data, err = m.ReadSessionCookie(c, m.cookieSeed, m.cookieKey)
+	if err != nil {
+		log.Error().AnErr("err", err).Str("data", c.Value).Msg("failed to read session cookie")
+		return nil, err
+	}
 
 	d := Data{}
-	if err := json.Unmarshal([]byte(data), &d); err != nil {
+	if err = json.Unmarshal([]byte(data), &d); err != nil {
 		log.Error().AnErr("err", err).Str("data", c.Value).Msg("failed to unmarshal auth cookie data")
 		return nil, err
 	}

@@ -9,20 +9,15 @@ GITSHA          := $(shell git rev-parse --short HEAD)
 prepare:
 	mkdir -p $(BUILD_DIR)
 
-lint:
-	go get -u golang.org/x/lint/golint
-	$(shell go list -f {{.Target}} golang.org/x/lint/golint) ./...
-
 check:
-	go get -u honnef.co/go/tools/cmd/staticcheck
-	$(shell go list -f {{.Target}} honnef.co/go/tools/cmd/staticcheck) ./...
+	golangci-lint run --fast
 
 sec:
 	go get -u github.com/securego/gosec/v2/cmd/gosec
 	$(shell go list -f {{.Target}} github.com/securego/gosec/v2/cmd/gosec) -fmt=golint ./...
 
 test: prepare
-	go test -short -coverprofile=$(BUILD_DIR)/cover.out ./...
+	go test -short -race -coverprofile=$(BUILD_DIR)/cover.out ./...
 
 build: prepare
 	goreleaser build --snapshot --rm-dist

@@ -7,6 +7,7 @@ import (
 	"github.com/habakke/auth-proxy/internal/cookie"
 	"github.com/habakke/auth-proxy/internal/session"
 	"github.com/habakke/auth-proxy/pkg/util"
+	"github.com/habakke/auth-proxy/pkg/util/logutils"
 	"github.com/rs/zerolog/log"
 	"html/template"
 	"net"
@@ -156,7 +157,7 @@ func (p *Proxy) serveReverseProxy(target string, authenticated bool, res http.Re
 			r.URL.Path = u.Path + r.URL.Path
 			r.Host = u.Host
 		},
-		Transport: util.NewLoggingRoundTripper(http.DefaultTransport),
+		Transport: logutils.NewLoggingRoundTripper(http.DefaultTransport),
 	}
 	proxy.ServeHTTP(res, req)
 }
@@ -181,7 +182,7 @@ func (p *Proxy) Login(res http.ResponseWriter, req *http.Request) {
 	if ok {
 		sd := session.Data{
 			ID:         user.GetID(),
-			Authorised: false,
+			Authorized: false,
 		}
 		_ = p.sessionManager.AttachSession(res, sd)
 		http.Redirect(res, req, "/", http.StatusFound)
@@ -240,7 +241,7 @@ func (p *Proxy) OauthCallback(res http.ResponseWriter, req *http.Request) {
 		ID:         user.GetID(),
 		Name:       user.GetName(),
 		Email:      user.GetEmail(),
-		Authorised: false,
+		Authorized: false,
 	}
 	_ = p.sessionManager.AttachSession(res, s)
 	http.Redirect(res, req, "/?", http.StatusFound)
@@ -265,20 +266,20 @@ func (p *Proxy) ErrorPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	name := "error.tpl"
-	t, err := template.New(name).ParseFiles(path.Join("./templates", name))
+	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
 	if err != nil {
 		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
 	}
 	data := struct {
 		ErrorMessage string
 		StaticPath   string
-		HomepageURL  string
+		HomePageURL  string
 		ContactEmail string
 	}{
 		ErrorMessage: msg,
 		StaticPath:   p.staticPath,
-		HomepageURL:  "https://www.matrise.net",
-		ContactEmail: "hello@matrise.net",
+		HomePageURL:  os.Getenv("HOMEPAGE_URL"),
+		ContactEmail: os.Getenv("CONTACT_EMAIL"),
 	}
 	_ = t.ExecuteTemplate(res, name, data)
 }
@@ -288,7 +289,7 @@ func (p *Proxy) LoginPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	name := "login.tpl"
-	t, err := template.New(name).ParseFiles(path.Join("./templates", name))
+	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
 	if err != nil {
 		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
 	}
@@ -309,7 +310,7 @@ func (p *Proxy) ResetPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	name := "reset.tpl"
-	t, err := template.New(name).ParseFiles(path.Join("./templates", name))
+	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
 	if err != nil {
 		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
 	}
@@ -326,7 +327,7 @@ func (p *Proxy) SignupPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	name := "signup.tpl"
-	t, err := template.New(name).ParseFiles(path.Join("./templates", name))
+	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
 	if err != nil {
 		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
 	}
@@ -335,13 +336,13 @@ func (p *Proxy) SignupPage(res http.ResponseWriter, req *http.Request) {
 		HomePageURL string
 	}{
 		StaticPath:  p.staticPath,
-		HomePageURL: "https://www.matrise.net",
+		HomePageURL: os.Getenv("HOMEPAGE_URL"),
 	}
 	_ = t.ExecuteTemplate(res, name, data)
 }
 
 func (p *Proxy) StaticFolder(res http.ResponseWriter, req *http.Request) {
-	http.StripPrefix(p.staticPath, http.FileServer(http.Dir("./static"))).ServeHTTP(res, req)
+	http.StripPrefix(p.staticPath, http.FileServer(http.Dir(path.Clean(os.Getenv("STATIC_DIR"))))).ServeHTTP(res, req)
 }
 
 func (p *Proxy) Logout(res http.ResponseWriter, req *http.Request) {
