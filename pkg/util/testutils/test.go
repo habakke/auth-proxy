@@ -62,7 +62,8 @@ func CreateHTTPClient(followRedirects bool) *http.Client {
 		MaxIdleConns:       10,
 		IdleConnTimeout:    30 * time.Second,
 		DisableCompression: true,
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+		//#nosec
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
 	client := &http.Client{

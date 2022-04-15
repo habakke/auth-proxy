@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -169,6 +170,9 @@ func NewCipher(secret []byte) (*Cipher, error) {
 
 // Encrypt a value for use in a cookie
 func (c *Cipher) Encrypt(value string) (string, error) {
+	if len(value) > 64*1024*1024 {
+		return "", errors.New("value is to large")
+	}
 	ciphertext := make([]byte, aes.BlockSize+len(value))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
