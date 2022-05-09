@@ -3,7 +3,7 @@ module github.com/habakke/auth-proxy
 go 1.18
 
 require (
-	github.com/felixge/httpsnoop v1.0.2
+	github.com/felixge/httpsnoop v1.0.3
 	github.com/gorilla/mux v1.8.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/client_model v0.2.0
