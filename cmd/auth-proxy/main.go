@@ -28,6 +28,10 @@ var (
 	token      = os.Getenv("TOKEN")
 	cookieSeed = os.Getenv("COOKIE_SEED")
 	cookieKey  = os.Getenv("COOKIE_KEY")
+
+	version   = ""
+	commit    = ""
+	buildTime = ""
 )
 
 func init() {
