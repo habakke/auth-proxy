@@ -34,17 +34,35 @@ spec:
             - name: TARGET
               value: "http://<service>.<namespace>.svc.cluster.local"
             - name: TOKEN
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: auth-proxy
+                  key: token
             - name: COOKIE_KEY
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: auth-proxy
+                  key: cookie-key
             - name: COOKIE_SEED
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: auth-proxy
+                  key: cookie-seed
             - name: GOOGLE_OAUTH_CLIENT_ID
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: auth-proxy
+                  key: google-oauth-client-id
             - name: GOOGLE_OAUTH_CLIENT_SECRET
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: auth-proxy
+                  key: google-oauth-client-secret
             - name: GOOGLE_OAUTH_CALLBACK_URL
-              value: "https://<hostname>/auth/google/callback"
+              valueFrom:
+                secretKeyRef:
+                  name: auth-proxy
+                  key: google-oauth-callback-url
           livenessProbe:
             initialDelaySeconds: 10
             timeoutSeconds: 30
