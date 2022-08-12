@@ -47,7 +47,7 @@ dockers:
     ids: [auth-proxy]
     goos: linux
     goarch: amd64
-    use_buildx: true
+    use: buildx
     dockerfile: Dockerfile
     build_flag_templates:
       - --pull
@@ -80,7 +80,7 @@ dockers:
     ids: [auth-proxy]
     goos: linux
     goarch: 386
-    use_buildx: true
+    use: buildx
     dockerfile: Dockerfile
     build_flag_templates:
       - --pull
@@ -113,7 +113,7 @@ dockers:
     ids: [auth-proxy]
     goos: linux
     goarch: arm64
-    use_buildx: true
+    use: buildx
     dockerfile: Dockerfile
     build_flag_templates:
       - --pull
@@ -147,7 +147,7 @@ dockers:
     goos: linux
     goarch: arm
     goarm: 7
-    use_buildx: true
+    use: buildx
     dockerfile: Dockerfile
     build_flag_templates:
       - --pull
