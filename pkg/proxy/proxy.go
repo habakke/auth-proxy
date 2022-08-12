@@ -29,18 +29,19 @@ type Proxy struct {
 	localAuth *auth.LocalAuth
 	provider  providers.Provider
 
-	whiteList  []*regexp.Regexp
-	errorPath  string
-	loginPath  string
-	logoutPath string
-	staticPath string
-	resetPath  string
-	signupPath string
+	pathWhiteList   []*regexp.Regexp
+	domainWhiteList []*regexp.Regexp
+	errorPath       string
+	loginPath       string
+	logoutPath      string
+	staticPath      string
+	resetPath       string
+	signupPath      string
 
 	sessionManager *session.Manager
 }
 
-func New(target string, provider providers.Provider, sessionManager *session.Manager) *Proxy {
+func NewProxy(target string, provider providers.Provider, sessionManager *session.Manager) *Proxy {
 	return &Proxy{
 		Target:            target,
 		headers:           make(map[string]string),
@@ -111,16 +112,22 @@ func (p *Proxy) Authenticate(req *http.Request) bool {
 	return p.provider.AuthenticateSession(s)
 }
 
-func (p *Proxy) IsWhitelistRequest(req *http.Request) bool {
-	return req.Method == "OPTIONS" || p.IsWhitelistedPath(req.URL.Path)
+func (p Proxy) IsWhitelistRequest(req *http.Request) bool {
+	return req.Method == "OPTIONS" || p.IsWhitelistedPath(req.URL.Path) || p.IsWhitelistedDomain(req.URL.Host)
 }
 
-func (p *Proxy) IsWhitelistedPath(path string) bool {
-	for _, u := range p.whiteList {
+func (p Proxy) IsWhitelistedPath(path string) bool {
+	for _, u := range p.pathWhiteList {
 		ok := u.MatchString(path)
-		if ok {
-			return true
-		}
+		return ok
+	}
+	return false
+}
+
+func (p Proxy) IsWhitelistedDomain(domain string) bool {
+	for _, d := range p.domainWhiteList {
+		ok := d.MatchString(domain)
+		return ok
 	}
 	return false
 }
@@ -253,7 +260,19 @@ func disableCaching(res http.ResponseWriter) {
 	res.Header().Set("Expires", "0")
 }
 
-func (p *Proxy) ErrorPage(res http.ResponseWriter, req *http.Request) {
+func (p Proxy) getTemplate(name string) *template.Template {
+	tDir := os.Getenv("TEMPLATE_DIR")
+	if tDir == "" {
+		log.Fatal().Msg("The TEMPLATE_DIR environmental variable cannot be empty")
+	}
+	t, err := template.New(name).ParseFiles(path.Join(path.Clean(tDir), name))
+	if err != nil {
+		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
+	}
+	return t
+}
+
+func (p Proxy) ErrorPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	msg := "No error message found"
@@ -266,10 +285,6 @@ func (p *Proxy) ErrorPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	name := "error.tpl"
-	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
-	if err != nil {
-		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
-	}
 	data := struct {
 		ErrorMessage string
 		StaticPath   string
@@ -281,7 +296,7 @@ func (p *Proxy) ErrorPage(res http.ResponseWriter, req *http.Request) {
 		HomePageURL:  os.Getenv("HOMEPAGE_URL"),
 		ContactEmail: os.Getenv("CONTACT_EMAIL"),
 	}
-	_ = t.ExecuteTemplate(res, name, data)
+	_ = p.getTemplate(name).ExecuteTemplate(res, name, data)
 }
 
 func (p *Proxy) LoginPage(res http.ResponseWriter, req *http.Request) {
@@ -289,10 +304,6 @@ func (p *Proxy) LoginPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	name := "login.tpl"
-	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
-	if err != nil {
-		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
-	}
 	data := struct {
 		LoginPath         string
 		ProviderLoginPath string
@@ -302,7 +313,7 @@ func (p *Proxy) LoginPage(res http.ResponseWriter, req *http.Request) {
 		ProviderLoginPath: p.provider.GetLoginPath(),
 		StaticPath:        p.staticPath,
 	}
-	_ = t.ExecuteTemplate(res, name, data)
+	_ = p.getTemplate(name).ExecuteTemplate(res, name, data)
 }
 
 func (p *Proxy) ResetPage(res http.ResponseWriter, req *http.Request) {
@@ -310,16 +321,12 @@ func (p *Proxy) ResetPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	name := "reset.tpl"
-	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
-	if err != nil {
-		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
-	}
 	data := struct {
 		StaticPath string
 	}{
 		StaticPath: p.staticPath,
 	}
-	_ = t.ExecuteTemplate(res, name, data)
+	_ = p.getTemplate(name).ExecuteTemplate(res, name, data)
 }
 
 func (p *Proxy) SignupPage(res http.ResponseWriter, req *http.Request) {
@@ -327,10 +334,6 @@ func (p *Proxy) SignupPage(res http.ResponseWriter, req *http.Request) {
 	disableCaching(res)
 
 	name := "signup.tpl"
-	t, err := template.New(name).ParseFiles(path.Join(path.Clean(os.Getenv("TEMPLATE_DIR")), name))
-	if err != nil {
-		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
-	}
 	data := struct {
 		StaticPath  string
 		HomePageURL string
@@ -338,11 +341,15 @@ func (p *Proxy) SignupPage(res http.ResponseWriter, req *http.Request) {
 		StaticPath:  p.staticPath,
 		HomePageURL: os.Getenv("HOMEPAGE_URL"),
 	}
-	_ = t.ExecuteTemplate(res, name, data)
+	_ = p.getTemplate(name).ExecuteTemplate(res, name, data)
 }
 
 func (p *Proxy) StaticFolder(res http.ResponseWriter, req *http.Request) {
-	http.StripPrefix(p.staticPath, http.FileServer(http.Dir(path.Clean(os.Getenv("STATIC_DIR"))))).ServeHTTP(res, req)
+	sDir := os.Getenv("STATIC_DIR")
+	if sDir == "" {
+		log.Fatal().Msg("The STATIC_DIR environmental variable cannot be empty")
+	}
+	http.StripPrefix(p.staticPath, http.FileServer(http.Dir(path.Clean(sDir)))).ServeHTTP(res, req)
 }
 
 func (p *Proxy) Logout(res http.ResponseWriter, req *http.Request) {

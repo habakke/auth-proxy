@@ -77,7 +77,7 @@ func main() {
 
 	oauthProvider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	p := proxy.New(
+	p := proxy.NewProxy(
 		target,
 		oauthProvider,
 		sm)
@@ -102,6 +102,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
+
 	err := srv.Shutdown(ctx)
 	if err != nil {
 		log.Info().Err(err).Msg("shutting down...")

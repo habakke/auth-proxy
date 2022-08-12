@@ -58,7 +58,7 @@ func TestMakeUnauthenticatedProxyRequest(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -84,7 +84,7 @@ func TestMakeAuthenticatedProxyRequest(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -116,7 +116,7 @@ func TestMetricsEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.Use(metrics.CreatePrometheusHTTPMetricsHandler)
 	pr.Handle("/metrics", promhttp.Handler())
@@ -173,7 +173,7 @@ func TestHealthzEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.Handle("/healthz", healthz.Handler())
 	pr.PathPrefix("/").Handler(proxy)
@@ -198,7 +198,7 @@ func TestStaticEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -222,7 +222,7 @@ func TestErrorEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -251,7 +251,7 @@ func TestLoginEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -276,7 +276,7 @@ func TestLogoutEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -300,7 +300,7 @@ func TestResetEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
@@ -325,7 +325,7 @@ func TestSignupEndpoint(t *testing.T) {
 	// Create proxy
 	provider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
-	proxy := New(serverURL, provider, sm)
+	proxy := NewProxy(serverURL, provider, sm)
 	pr := mux.NewRouter()
 	pr.PathPrefix("/").Handler(proxy)
 	proxyURL := testutils.StartProxy(pr)
