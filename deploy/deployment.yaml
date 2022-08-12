@@ -30,7 +30,7 @@ spec:
             - name: LOGLEVEL
               value: "debug"
             - name: ENV
-              value: local
+              value: "local"
             - name: TARGET
               value: "http://<service>.<namespace>.svc.cluster.local"
             - name: TOKEN
