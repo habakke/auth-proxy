@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: auth-proxy
+spec:
+  endpoints:
+    - interval: 1m
+      path: /metrics
+      port: http
+      scrapeTimeout: 30s
+  selector:
+    matchLabels:
+      app: auth-proxy

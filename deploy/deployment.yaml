@@ -1,0 +1,61 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: auth-proxy
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: auth-proxy
+  template:
+    metadata:
+      labels:
+        app: auth-proxy
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - name: auth-proxy
+          image: ghcr.io/habakke/auth-proxy:0.9.15
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: PORT
+              value: 8080
+            - name: LOGLEVEL
+              value: "debug"
+            - name: ENV
+              value: local
+            - name: TARGET
+              value: "http://<service>.<namespace>.svc.cluster.local"
+            - name: TOKEN
+              value: ""
+            - name: COOKIE_KEY
+              value: ""
+            - name: COOKIE_SEED
+              value: ""
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              value: ""
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              value: ""
+            - name: GOOGLE_OAUTH_CALLBACK_URL
+              value: "https://<hostname>/auth/google/callback"
+          livenessProbe:
+            initialDelaySeconds: 10
+            timeoutSeconds: 30
+            httpGet:
+              scheme: "HTTP"
+              path: "/healthz"
+              port : 80
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 50Mi

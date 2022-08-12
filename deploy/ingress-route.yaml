@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: auth-proxy
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`auth.k3s.matrise.net`)
+      priority: 10
+      services:
+        - name: auth-proxy
+          port: 80
+  tls:
+    secretName: wildcard-k3s-matrise-cert
