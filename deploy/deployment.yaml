@@ -26,7 +26,7 @@ spec:
               protocol: TCP
           env:
             - name: PORT
-              value: 8080
+              value: "8080"
             - name: LOGLEVEL
               value: "debug"
             - name: ENV
