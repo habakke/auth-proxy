@@ -9,7 +9,6 @@ Supported authentication providers:
 ### Prerequisites
 
 This project has the following prerequisites which must be installed locally to build and run tests
-* goreleaser
 * golangci-lint
 
 ### Build
@@ -61,8 +60,6 @@ available environmental variables and their default value.
 | GOOGLE_OAUTH_CALLBACK_URL | - | Google Oauth2 callback url, ex. https://example.com/auth/google/callback |
 | HOMEPAGE_URL | - | Homepage URL which is inserted into templates |
 | CONTACT_EMAIL | - | Contact email which is inserted into templates |
-| TEMPLATE_DIR | /templates | Path to where template files are located |
-| STATIC_DIR | /static | Path to where static files are located |
 
 ### Provider configuration
 

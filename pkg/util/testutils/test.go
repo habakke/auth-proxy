@@ -6,7 +6,7 @@ import (
 	"github.com/habakke/auth-proxy/pkg/util/logutils"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -94,8 +94,10 @@ func CheckResponseContentType(t *testing.T, res *http.Response, contentType stri
 }
 
 func CheckResponseBody(t *testing.T, res *http.Response, keyword string) {
-	body, err := ioutil.ReadAll(res.Body)
-	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	require.NoError(t, err)
 	require.Contains(t, string(body), keyword)
 }

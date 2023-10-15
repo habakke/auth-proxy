@@ -8,6 +8,8 @@ import (
 	"github.com/habakke/auth-proxy/internal/healthz"
 	"github.com/habakke/auth-proxy/internal/metrics"
 	"github.com/habakke/auth-proxy/internal/session"
+	"github.com/habakke/auth-proxy/pkg/config"
+	"github.com/habakke/auth-proxy/pkg/helper"
 	"github.com/habakke/auth-proxy/pkg/proxy"
 	"github.com/habakke/auth-proxy/pkg/util/logutils"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,19 +23,6 @@ import (
 	"time"
 )
 
-// Global variables
-var (
-	port       = os.Getenv("PORT")
-	target     = os.Getenv("TARGET")
-	token      = os.Getenv("TOKEN")
-	cookieSeed = os.Getenv("COOKIE_SEED")
-	cookieKey  = os.Getenv("COOKIE_KEY")
-
-	version   = ""
-	commit    = ""
-	buildTime = ""
-)
-
 func init() {
 	ConfigureMaxProcs()
 	metrics.ConfigurePrometheusMetrics()
@@ -45,7 +34,7 @@ func ConfigureMaxProcs() {
 }
 
 func profileStart() {
-	if len(os.Getenv("PROFILE")) == 0 {
+	if !helper.IsEnvSet("PROFILE") {
 		return
 	}
 	f, err := os.Create("cpuprofile")
@@ -67,13 +56,22 @@ func profileStop() {
 }
 
 func main() {
+	fmt.Printf("auth-proxy %s %s %s\n", config.Version(), config.BuildTime(), config.BuildUser())
 	profileStart()
 	defer profileStop()
 
 	ctx := context.Background()
 
-	addr := fmt.Sprintf(":%s", port)
-	log.Info().Msgf("starting proxy server for %s on %s", target, addr)
+	port := helper.GetIntEnvWithDefault("PORT", 8080)
+	addr := fmt.Sprintf(":%d", port)
+	target, err := helper.GetStringEnv("TARGET")
+	helper.HandleError(err, true, "TARGET environment variable not set")
+	fmt.Printf("starting proxy server for http://%s on %s\r\n", target, addr)
+
+	cookieSeed, err := helper.GetStringEnv("COOKIE_SEED")
+	helper.HandleError(err, true, "COOKIE_SEED environment variable not set")
+	cookieKey, err := helper.GetStringEnv("COOKIE_KEY")
+	helper.HandleError(err, true, "COOKIE_KEY environment variable not set")
 
 	oauthProvider := providers.New("Google", &providers.ProviderData{})
 	sm := session.NewManager(cookieSeed, cookieKey)
@@ -82,6 +80,8 @@ func main() {
 		oauthProvider,
 		sm)
 
+	token, err := helper.GetStringEnv("TOKEN")
+	helper.HandleError(err, true, "TOKEN environment variable not set")
 	p.AddBearingTokenToUpstreamRequests(token)
 
 	r := mux.NewRouter()
@@ -103,7 +103,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	err := srv.Shutdown(ctx)
+	err = srv.Shutdown(ctx)
 	if err != nil {
 		log.Info().Err(err).Msg("shutting down...")
 	} else {

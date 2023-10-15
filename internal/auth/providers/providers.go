@@ -34,8 +34,8 @@ type Token struct {
 func New(provider string, p *ProviderData) Provider {
 	switch provider {
 	case "google":
-		return NewGoogleProvider(p)
+		return NewGoogleProvider(p, GetGoogleOauthConfig())
 	default:
-		return NewGoogleProvider(p)
+		return NewGoogleProvider(p, GetGoogleOauthConfig())
 	}
 }
