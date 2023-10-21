@@ -401,7 +401,7 @@ table {
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/static/Inter-Regular.woff2) format("woff2"), url(/static/Inter-Regular.woff) format("woff");
+  src: url(/pkg/proxy/static/Inter-Regular.woff2) format("woff2"), url(/pkg/proxy/static/Inter-Regular.woff) format("woff");
 }
 
 @font-face {
@@ -409,7 +409,7 @@ table {
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(/static/Inter-Medium.woff2) format("woff2"), url(/static/Inter-Medium.woff) format("woff");
+  src: url(/pkg/proxy/static/Inter-Medium.woff2) format("woff2"), url(/pkg/proxy/static/Inter-Medium.woff) format("woff");
 }
 
 @font-face {
@@ -417,7 +417,7 @@ table {
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url(/static/Inter-SemiBold.woff2) format("woff2"), url(/static/Inter-SemiBold.woff) format("woff");
+  src: url(/pkg/proxy/static/Inter-SemiBold.woff2) format("woff2"), url(/pkg/proxy/static/Inter-SemiBold.woff) format("woff");
 }
 
 @font-face {
@@ -425,7 +425,7 @@ table {
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/static/Inter-Bold.woff2) format("woff2"), url(/static/Inter-Bold.woff) format("woff");
+  src: url(/pkg/proxy/static/Inter-Bold.woff2) format("woff2"), url(/pkg/proxy/static/Inter-Bold.woff) format("woff");
 }
 
 /*

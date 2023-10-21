@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/habakke/auth-proxy/internal/cookie"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -80,7 +80,7 @@ func TestAttachSession(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/attach", srv.URL), nil)
 	res, _ := http.DefaultClient.Do(req)
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	fmt.Println(string(body))
 
 	// Hokey pokey need to adapt to the session interface

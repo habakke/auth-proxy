@@ -1,0 +1,25 @@
+name: Production pipeline
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Terraform variables
+        shell: bash
+        run: |
+          echo "TF_VAR_project_id=${{ vars.DEPLOY_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_environment=production" >> $GITHUB_ENV
+          echo "TF_VAR_container=${{ vars.DOCKER_REPO }}/${{ vars.DOCKER_IMAGE }}:${{ github.sha }}" >> $GITHUB_ENV
+      - uses: habakke/github-actions/.github/actions/terraform-deploy-gcp@master
+        with:
+          directory: ./deploy/production
+          service_account_key: ${{ vars.DEPLOY_SERVICE_ACCOUNT_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

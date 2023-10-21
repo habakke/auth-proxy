@@ -1,11 +1,13 @@
 package proxy
 
 import (
+	"embed"
 	"fmt"
 	"github.com/habakke/auth-proxy/internal/auth"
 	"github.com/habakke/auth-proxy/internal/auth/providers"
 	"github.com/habakke/auth-proxy/internal/cookie"
 	"github.com/habakke/auth-proxy/internal/session"
+	"github.com/habakke/auth-proxy/pkg/helper"
 	"github.com/habakke/auth-proxy/pkg/util"
 	"github.com/habakke/auth-proxy/pkg/util/logutils"
 	"github.com/rs/zerolog/log"
@@ -14,7 +16,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -96,11 +97,7 @@ func (p *Proxy) AddXForwardedForToRequests(host string) {
 }
 
 func (p *Proxy) getProxyURL() string {
-	target := os.Getenv("TARGET")
-	if target == "" {
-		target = p.Target
-	}
-	return target
+	return p.Target
 }
 
 func (p *Proxy) Authenticate(req *http.Request) bool {
@@ -260,12 +257,11 @@ func disableCaching(res http.ResponseWriter) {
 	res.Header().Set("Expires", "0")
 }
 
+//go:embed templates
+var templatesFS embed.FS
+
 func (p Proxy) getTemplate(name string) *template.Template {
-	tDir := os.Getenv("TEMPLATE_DIR")
-	if tDir == "" {
-		log.Fatal().Msg("The TEMPLATE_DIR environmental variable cannot be empty")
-	}
-	t, err := template.New(name).ParseFiles(path.Join(path.Clean(tDir), name))
+	t, err := template.New(name).ParseFS(templatesFS, path.Join("templates/", name))
 	if err != nil {
 		log.Fatal().AnErr("err", err).Msgf("failed parsing template %s", name)
 	}
@@ -293,8 +289,8 @@ func (p Proxy) ErrorPage(res http.ResponseWriter, req *http.Request) {
 	}{
 		ErrorMessage: msg,
 		StaticPath:   p.staticPath,
-		HomePageURL:  os.Getenv("HOMEPAGE_URL"),
-		ContactEmail: os.Getenv("CONTACT_EMAIL"),
+		HomePageURL:  helper.GetStringEnvWithDefault("HOMEPAGE_URL", ""),
+		ContactEmail: helper.GetStringEnvWithDefault("CONTACT_EMAIL", ""),
 	}
 	_ = p.getTemplate(name).ExecuteTemplate(res, name, data)
 }
@@ -339,17 +335,16 @@ func (p *Proxy) SignupPage(res http.ResponseWriter, req *http.Request) {
 		HomePageURL string
 	}{
 		StaticPath:  p.staticPath,
-		HomePageURL: os.Getenv("HOMEPAGE_URL"),
+		HomePageURL: helper.GetStringEnvWithDefault("HOMEPAGE_URL", ""),
 	}
 	_ = p.getTemplate(name).ExecuteTemplate(res, name, data)
 }
 
+//go:embed static
+var staticFS embed.FS
+
 func (p *Proxy) StaticFolder(res http.ResponseWriter, req *http.Request) {
-	sDir := os.Getenv("STATIC_DIR")
-	if sDir == "" {
-		log.Fatal().Msg("The STATIC_DIR environmental variable cannot be empty")
-	}
-	http.StripPrefix(p.staticPath, http.FileServer(http.Dir(path.Clean(sDir)))).ServeHTTP(res, req)
+	http.FileServer(http.FS(staticFS)).ServeHTTP(res, req)
 }
 
 func (p *Proxy) Logout(res http.ResponseWriter, req *http.Request) {
