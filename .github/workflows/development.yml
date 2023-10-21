@@ -6,6 +6,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Debug
+        shell: bash
+        run: |
+          echo PULL_REQUEST_HEAD_SHA=${{ github.event.pull_request.head.sha }}
+          echo GITHUB_SHA=${{ github.sha }}
+
   docker-build:
     runs-on: ubuntu-latest
     environment: development
