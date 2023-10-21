@@ -26,6 +26,9 @@ docker-run:: docker-build
     -e COOKIE_KEY=$(COOKIE_KEY) \
     -e TOKEN=$(TOKEN) \
     "${REPO}/${SVC}"
-
+pull:: build
+	@act pull_request --container-architecture linux/amd64 -s GITHUB_TOKEN=$$(gh auth token) --var DOCKER_IMAGE=$(REPO)/$(SVC)
+push:: build
+	@act push --container-architecture linux/amd64 -s GITHUB_TOKEN=$$(gh auth token) --var DOCKER_IMAGE=$(REPO)/$(SVC)
 clean:
 	@rm $(RELDIR)/$(SVC)

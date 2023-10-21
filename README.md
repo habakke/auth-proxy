@@ -9,7 +9,17 @@ Supported authentication providers:
 ### Prerequisites
 
 This project has the following prerequisites which must be installed locally to build and run tests
-* golangci-lint
+* docker
+* act
+* github cli
+
+#### Github Cli
+Install using brew
+
+```shell
+brew install gh
+gh auth login -s write:packages
+```
 
 ### Build
 To build from source run

@@ -1,0 +1,48 @@
+name: Development pipeline
+on:
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    outputs:
+      tags: ${{ env.DOCKER_METADATA_OUTPUT_TAGS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: habakke/github-actions/.github/actions/docker-build-github@master
+        with:
+          image_name: ${{ vars.DOCKER_REPO }}/${{ vars.DOCKER_IMAGE }}
+          dockerfile: ./Dockerfile
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  terraform-deploy:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Terraform variables
+        shell: bash
+        run: |
+          echo "TF_VAR_project_id=${{ vars.DEPLOY_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_environment=development" >> $GITHUB_ENV
+          echo "TF_VAR_container=${{ vars.DOCKER_REPO }}/${{ vars.DOCKER_IMAGE }}:${{ github.sha }}" >> $GITHUB_ENV
+      - uses: habakke/github-actions/.github/actions/terraform-deploy-gcp@master
+        with:
+          directory: ./deploy/development
+          service_account_key: ${{ vars.DEPLOY_SERVICE_ACCOUNT_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_on_pull: true
