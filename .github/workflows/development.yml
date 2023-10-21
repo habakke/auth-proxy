@@ -1,4 +1,5 @@
 name: Development pipeline
+run-name: Deploy to 'development' environment by @${{ github.actor }}
 on:
   pull_request:
     branches:
@@ -6,18 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  debug:
-    runs-on: ubuntu-latest
-    environment: development
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Debug
-        shell: bash
-        run: |
-          echo PULL_REQUEST_HEAD_SHA=${{ github.event.pull_request.head.sha }}
-          echo GITHUB_SHA=${{ github.sha }}
-
   docker-build:
     runs-on: ubuntu-latest
     environment: development
@@ -33,7 +22,7 @@ jobs:
       - uses: habakke/github-actions/.github/actions/docker-build-github@master
         with:
           image_name: ${{ vars.DOCKER_REPO }}/${{ vars.DOCKER_IMAGE }}
-          dockerfile: ./Dockerfile
+          dockerfile: Dockerfile
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   terraform-deploy:
@@ -54,7 +43,7 @@ jobs:
           echo "TF_VAR_container=${{ vars.DOCKER_REPO }}/${{ vars.DOCKER_IMAGE }}:${{ github.sha }}" >> $GITHUB_ENV
       - uses: habakke/github-actions/.github/actions/terraform-deploy-gcp@master
         with:
-          directory: ./deploy/development
+          directory: deploy/development
           service_account_key: ${{ vars.DEPLOY_SERVICE_ACCOUNT_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           deploy_on_pull: true
